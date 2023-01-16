@@ -1,0 +1,32 @@
+PREFIX glystreem: <https://glyconnect.expasy.org/rdf/structures#> 
+PREFIX : <https://glyconnect.expasy.org/glystreem/> 
+PREFIX modl: <https://archive.org/services/purl/domain/modular_ontology_design_library/> 
+
+SELECT DISTINCT ?glycanid WHERE 
+{ 
+    ?glycan a glystreem:Glycan ; 
+            glystreem:id ?glycanid ; 
+            glystreem:hasResidueSet ?resSet ; 
+            glystreem:hasGlycanCore/glystreem:hasCoreRoot ?reducing_end . 
+
+    # Describe the Core 2 Structure 
+
+    # GalNAc reducing end 
+    ?reducing_end glystreem:hasBase/glystreem:baseName "dgal-HEX-1:5" ; 
+                  glystreem:hasSubstituent/glystreem:subName "n-acetyl" . 
+    ?reducing_end modl:treehasChild ?Hex ; 
+                  modl:treehasChild ?HexNAc . 
+    FILTER(?Hex != ?HexNAc) 
+
+    # Gal 
+    ?Hex glystreem:hasBase/glystreem:baseName "dgal-HEX-1:5" . 
+    FILTER NOT EXISTS {?Hex glystreem:hasSubstituent ?sub} 
+
+    # GlcNAc 
+    ?HexNAc glystreem:hasBase/glystreem:baseName "dglc-HEX-1:5" ; 
+            glystreem:hasSubstituent/glystreem:subName "n-acetyl" . 
+    ?NeuAc modl:bagitemOf ?resSet ; 
+           glystreem:composition "NeuAc" . 
+    ?Fuc modl:bagitemOf ?resSet ; 
+         glystreem:composition "dHex" . 
+} order by asc(xsd:integer(?glycanid)) 

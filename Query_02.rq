@@ -1,0 +1,39 @@
+PREFIX glystreem: <https://glyconnect.expasy.org/rdf/structures#> 
+PREFIX modl: <https://archive.org/services/purl/domain/modular_ontology_design_library/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX skos:<http://www.w3.org/2008/05/skos#> 
+PREFIX sio: <http://semanticscience.org/resource/> 
+PREFIX glycan: <http://purl.jp/bio/12/glyco/glycan#> 
+PREFIX glyco: <http://purl.jp/bio/12/glyco/conjugate#> 
+SELECT DISTINCT ?disease ?disease_name ?notation ?label ?glycanid ?glycan_type ?glycan_core 
+WHERE 
+{ 
+   { 
+      SELECT DISTINCT ?disease ?disease_name ?notation ?label ?glycanid where 
+      { 
+
+         SERVICE <https://glyconnect.expasy.org/sparql> 
+         { 
+            ?disease rdfs:label ?disease_name . 
+            ?disease skos:notation ?notation . 
+            ?ref_compound_disease sio:SIO_000628 ?disease . 
+
+            # Disease Myositis = DOID:633 
+            FILTER(?notation = "DOID:633") 
+            ?ref_compound glycan:has_association ?ref_compound_disease . 
+            ?ref_compound glyco:has_protein_part ?glycoprotein . 
+            ?glycoprotein rdfs:label ?label . 
+
+            # Search for proteins with "immunoglobulin" and "gamma" in the name (case insensitive) 
+            FILTER((contains(lcase(str(?label)), "immunoglobulin")) && contains(lcase(str(?label)), "gamma 1") && !contains(lcase(str(?label)), "receptor")) 
+            ?ref_compound glyco:has_saccharide_part ?glycan . 
+            BIND(REPLACE(STR(?glycan), "https://purl.org/glyconnect/structure/", "") as ?glycanid) 
+         } 
+      } 
+   } 
+
+   ?glycan a glystreem:Glycan ; 
+             glystreem:id ?glycanid ; 
+             glystreem:glycan_type ?glycan_type ; 
+             glystreem:glycan_core ?glycan_core .              
+} 
